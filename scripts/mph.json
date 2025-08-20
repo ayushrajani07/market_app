@@ -1,0 +1,362 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Overall Status",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: -15m) |> filter(fn: (r) => r._measurement == \"monitor_status\" and r.app == \"logger\" and r._field == \"status\") |> last()"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "ok": { "index": 0, "text": "ok", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red" }, { "value": 1, "color": "green" } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Last Pipeline Tick Age (s)",
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: -30m) |> filter(fn: (r) => r._measurement == \"pipeline_tick\" and r.app == \"logger\" and r._field == \"loop_duration_ms\") |> last() |> elapsed(unit: 1s) |> keep(columns: [\"elapsed\"]) |> rename(columns: {elapsed: \"_value\"})"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 60 }, { "color": "red", "value": 180 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Feed Freshness (Points/min)",
+      "gridPos": { "h": 4, "w": 6, "x": 9, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: -1m) |> filter(fn: (r) => r._measurement == \"index_overview\" or r._measurement == \"atm_option_quote\") |> count()"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red" }, { "color": "green", "value": 1 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Avg Overview Lag (today)",
+      "gridPos": { "h": 4, "w": 4, "x": 15, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: today()) |> filter(fn: (r) => r._measurement == \"monitor_status\" and r.app == \"logger\" and r._field == \"lag_sec_index_overview\") |> mean()"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 10 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Avg Option Lag (today)",
+      "gridPos": { "h": 4, "w": 4, "x": 19, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: today()) |> filter(fn: (r) => r._measurement == \"monitor_status\" and r.app == \"logger\" and r._field == \"lag_sec_atm_option_quote\") |> mean()"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 10 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Errors (Today)",
+      "gridPos": { "h": 4, "w": 4, "x": 23, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: today()) |> filter(fn: (r) => r._measurement == \"monitor_status\" and r.app == \"logger\" and r._field == \"errors_in_tick\") |> sum()"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 3 }, { "color": "red", "value": 10 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Pipeline Loop Duration (ms)",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"pipeline_tick\" and r.app == \"logger\" and r._field == \"loop_duration_ms\") |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 2000 }, { "color": "red", "value": 4000 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "hidden" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Broker Health (Latency ms / 429 per min)",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"broker_health\" and r.api == \"kite\" and r._field == \"quote_latency_ms\") |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)"
+        },
+        {
+          "refId": "B",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"broker_health\" and r.api == \"kite\" and r._field == \"http_429_count\") |> aggregateWindow(every: 1m, fn: sum, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "http_429_count" },
+            "properties": [ { "id": "unit", "value": "short" } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "quote_latency_ms" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 800 }, { "color": "red", "value": 1500 } ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Influx Write Health (per min)",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 10 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"influx_write_stats\" and (r._field == \"points_written\" or r._field == \"points_rejected\")) |> aggregateWindow(every: 1m, fn: sum, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "points_rejected" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] }
+              }
+            ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "CSV Throughput (groups/rows per min)",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 10 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"csv_throughput\" and (r._field == \"csv_groups_written\" or r._field == \"csv_rows_written\")) |> aggregateWindow(every: 1m, fn: sum, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "type": "table",
+      "title": "Top Error Signals (Today)",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: today()) |> filter(fn: (r) => r._measurement == \"monitor_status\" and r.app == \"logger\") |> filter(fn: (r) => r._field == \"errors_in_tick\" or r._field == \"kite_429_count\" or r._field == \"influx_points_rejected\") |> group(columns: [\"_field\"]) |> sum() |> sort(columns: [\"_value\"], desc: true)"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "footer": { "countRows": false, "enablePagination": true, "fields": "" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "displayMode": "color-text" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "table",
+      "title": "Errors (Recent) — copyable",
+      "description": "Scrollable recent error events. Use the row menu or select to copy.",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: -6h) |> filter(fn: (r) => r._measurement == \"monitor_status\" and r.app == \"logger\") |> keep(columns: [\"_time\",\"_field\",\"_value\",\"env\",\"host\"]) |> filter(fn: (r) => r._field == \"errors_in_tick\" or r._field == \"kite_429_count\" or r._field == \"influx_points_rejected\") |> filter(fn: (r) => exists r._value and r._value > 0) |> sort(columns: [\"_time\"], desc: true) |> limit(n: 500)"
+        }
+      ],
+      "options": { "showHeader": true, "footer": { "countRows": true, "enablePagination": true, "fields": "" } },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "displayMode": "auto" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage (%)",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 30 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"system_metrics\" and r._field == \"cpu_percent\") |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": { "mode": "percentage", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage (%)",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 30 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"system_metrics\" and r._field == \"mem_percent\") |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": { "mode": "percentage", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Disk Usage (%)",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 30 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"system_metrics\" and r._field == \"disk_used_percent\") |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": { "mode": "percentage", "steps": [ { "color": "green", "value": 0 }, { "color": "yellow", "value": 80 }, { "color": "red", "value": 90 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Network Throughput (MB/s)",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 30 },
+      "datasource": { "type": "influxdb", "uid": "eeuyszx2tqxa8d" },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"your-bucket\") |> range(start: v.timeRangeStart) |> filter(fn: (r) => r._measurement == \"system_metrics\" and (r._field == \"net_tx_mb_s\" or r._field == \"net_rx_mb_s\")) |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "MBs" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["market", "health", "pipeline", "system"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "timezone": "",
+  "title": "Market Pipeline Health (Live)",
+  "version": 8
+}
